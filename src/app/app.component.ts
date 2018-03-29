@@ -4,6 +4,7 @@ import { SplashScreen} from "@ionic-native/splash-screen";
 import { StatusBar} from "@ionic-native/status-bar";
 
 import { HomePage } from '../pages/home/home';
+import { AvoidPointsProvider } from '../providers/avoid-points/avoid-points';
 
 @Component({
   template: `<ion-nav [root]="rootPage"></ion-nav>`

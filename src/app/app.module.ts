@@ -7,6 +7,7 @@ import { Geolocation } from '@ionic-native/geolocation';
 import { BrowserModule } from '@angular/platform-browser';
 
 import { HomePage } from '../pages/home/home';
+import { AvoidPointsProvider } from '../providers/avoid-points/avoid-points';
 
 @NgModule({
   declarations: [
@@ -25,7 +26,8 @@ import { HomePage } from '../pages/home/home';
   providers: [
     SplashScreen,
     StatusBar,
-    Geolocation
+    Geolocation,
+    AvoidPointsProvider
   ]
 })
 export class AppModule {}

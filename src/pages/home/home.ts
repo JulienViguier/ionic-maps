@@ -1,6 +1,7 @@
 import { Component, NgZone, enableProdMode } from '@angular/core';
 import { Geolocation } from '@ionic-native/geolocation';
 import { LoadingController } from 'ionic-angular';
+//import { AvoidPointsProvider } from '../providers/avoid-points/avoid_points';
 
 enableProdMode();
 
@@ -21,11 +22,14 @@ export class HomePage {
   start: any;
   end: any;
   request: any;
+  request_2: any;
+  avoid_points: any;
 
   constructor(
     public zone: NgZone,
     public geolocation: Geolocation,
-    public loadingCtrl: LoadingController
+    public loadingCtrl: LoadingController,
+    //public avoidPointsService: AvoidPointsProvider
   ) {
     this.geocoder = new google.maps.Geocoder;
     let elem = document.createElement("div");
@@ -39,10 +43,14 @@ export class HomePage {
     this.autocompleteItems_2 = [];
     this.markers = [];
     this.loading = this.loadingCtrl.create();
+    this.avoid_points = [];
   }
 
   ionViewDidEnter(){
     this.initMap();
+    /*this.avoidPointsService.getAvoidPoints().subscribe(this.avoid_points) => {
+      this.avoid_points = avoid_points;
+    }*/
   }
 
   async initMap(){ 
@@ -58,6 +66,9 @@ export class HomePage {
       },
       ascenceur: {
         icon: icon_base + "ascenceur.png"
+      },
+      travaux: {
+        icon: icon_base + "travaux.png"
       }
     };
     let features = [
@@ -67,6 +78,9 @@ export class HomePage {
     }, {
       pos: new google.maps.LatLng(48.788058, 2.367054),
       t: "ascenceur"
+    }, {
+      pos: new google.maps.LatLng(48.788546, 2.366839),
+      t: "travaux"
     }
     ];
 
@@ -181,55 +195,70 @@ export class HomePage {
     this.markers = [];
   }
 
-  calculateAndDisplayRoute() {
+  calculateAndDisplayRoute(){
     let first = new google.maps.LatLng(48.792621, 2.363494);
-    //let second = new google.maps.LatLng(48.788058, 2.367054);
-    let directionsService = new google.maps.DirectionsService;
-    let directionsDisplay = new google.maps.DirectionsRenderer;
-    let avoid_points = [
-    {
-      poly: "icxhHixlMbCI",
-      lvl: 0
-    }
-    ];
+    
+    let avoid_points = "(48.7885096, 2.363743999999997)";
     let waypts = [
     {
       location: first,
       stopover: false
     }
     ];
-    directionsDisplay.setMap(this.map);
+    
     this.start = this.autocomplete.input_1;
     this.end = this.autocomplete.input_2;
-    var request = {
+    var request_1 = {
       origin: this.start,
       destination: this.end,
       travelMode: google.maps.TravelMode["WALKING"],
       provideRouteAlternatives: true,
-      //waypoints: waypts
     };
+    //debugger;
+    var request_2 = {
+      origin: this.start,
+      destination: this.end,
+      travelMode: google.maps.TravelMode["WALKING"],
+      provideRouteAlternatives: true,
+      waypoints: waypts
+    }
+    this.avoidPoints(request_1, "red");
+    this.avoidPoints(request_2, "green");
+  }
+
+  avoidPoints(request, color){
+    let directionsService = new google.maps.DirectionsService;
+    let directionsDisplay = new google.maps.DirectionsRenderer({
+      polylineOptions: {
+        strokeColor: color
+      }
+    });
+    directionsDisplay.setMap(this.map);
+    //debugger;
     directionsService.route(request, function(response, status){
       if(status == google.maps.DirectionsStatus.OK){
-        //debugger;
-        //console.log(response);
-        let step_point = response.routes[0].legs[0];
-        //console.log(step_point);
-        for(var i = 0; i < (step_point.steps.length); i++) {
-          for(var j = 0; j < (avoid_points.length); j++){
-            /*let test = step_point.steps[i] as any;
-            console.log(test);
-            if(test.polyline.points == avoid_points[j][0]){
-              window.alert('passage trouvé');
+        for(let i = 0, len = response.routes.length; i < len; i++){
+          let step_point = response.routes[i].legs[0];
+          //console.log(step_point);
+          for(let j = 0; j < step_point.steps.length; j++){
+            //window.alert(step_point.steps[j].start_location);
+            if(step_point.steps[j].start_location == this.avoid_points){
+              j = step_point.steps.length - 1;
             }
-            else{
-              window.alert('passage pas trouvé');
-            }*/
+            else {
+              new google.maps.DirectionsRenderer({
+                map: this.map,
+                directions: response,
+                routeIndex: i
+              });
+              directionsDisplay.setDirections(response);
+            }
           }
         }
-        directionsDisplay.setDirections(response);
+        //directionsDisplay.setDirections(response);
       } else {
         window.alert('Directions request failed due to ' + status);
       }
-    });
+    }); 
   }
 }
